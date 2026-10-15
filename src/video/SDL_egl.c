@@ -278,6 +278,20 @@ bool SDL_EGL_HasExtension(SDL_VideoDevice *_this, SDL_EGL_ExtensionType type, co
     return false;
 }
 
+/* EGLConfigs have no stereo attribute: a window surface with two views has the
+ * left and right back buffers of desktop OpenGL (EGL_EXT_multiview_window).
+ */
+bool SDL_EGL_HasStereoSurface(SDL_VideoDevice *_this)
+{
+#ifdef EGL_EXT_multiview_window
+    return _this->egl_data && _this->gl_config.stereo &&
+           _this->gl_config.profile_mask != SDL_GL_CONTEXT_PROFILE_ES &&
+           SDL_EGL_HasExtension(_this, SDL_EGL_DISPLAY_EXTENSION, "EGL_EXT_multiview_window");
+#else
+    return false;
+#endif
+}
+
 SDL_FunctionPointer SDL_EGL_GetProcAddressInternal(SDL_VideoDevice *_this, const char *proc)
 {
     SDL_FunctionPointer result = NULL;
@@ -1288,6 +1302,13 @@ EGLSurface SDL_EGL_CreateSurface(SDL_VideoDevice *_this, SDL_Window *window, Nat
             attribs[attr++] = EGL_GL_COLORSPACE_KHR;
             attribs[attr++] = _this->gl_config.framebuffer_srgb_capable ? EGL_GL_COLORSPACE_SRGB_KHR : EGL_GL_COLORSPACE_LINEAR_KHR;
         }
+    }
+#endif
+
+#ifdef EGL_EXT_multiview_window
+    if (SDL_EGL_HasStereoSurface(_this)) {
+        attribs[attr++] = EGL_MULTIVIEW_VIEW_COUNT_EXT;
+        attribs[attr++] = 2;
     }
 #endif
 
