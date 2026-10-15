@@ -2783,15 +2783,7 @@ bool Wayland_CreateWindow(SDL_VideoDevice *_this, SDL_Window *window, SDL_Proper
      * application wants SDL to handle scaling.
      */
     if (!custom_surface_role || (window->flags & SDL_WINDOW_HIGH_PIXEL_DENSITY)) {
-        bool stereo = false;
-#ifdef SDL_VIDEO_OPENGL_EGL
-        /* The EGL surface of a stereo window has a viewport of its own, which maps the buffer
-         * holding both views onto the window, and a surface can only have one.
-         */
-        stereo = (window->flags & SDL_WINDOW_OPENGL) && SDL_EGL_HasStereoSurface(_this);
-#endif
-
-        if (c->viewporter && !stereo) {
+        if (c->viewporter) {
             data->viewport = wp_viewporter_get_viewport(c->viewporter, data->surface);
 
             // The viewport always uses the entire buffer.
